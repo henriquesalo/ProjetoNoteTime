@@ -9,26 +9,35 @@ export default function Agenda() {
   const [currentWeek, setCurrentWeek] = useState(startOfWeek(new Date(), { weekStartsOn: 0 }));
   const [barbeiroFiltro, setBarbeiroFiltro] = useState("todos");
 
-  const { data: agendamentos = [] } = useQuery({
+  // 🆕 Incluímos controle de carregamento e erro
+  const {
+    data: agendamentos = [],
+    isLoading: agendamentosLoading,
+    isError: agendamentosError
+  } = useQuery({
     queryKey: ['agendamentos'],
     queryFn: agendamentosApi.listar
   });
 
-  const { data: barbeiros = [] } = useQuery({
+  const {
+    data: barbeiros = [],
+    isLoading: barbeirosLoading,
+    isError: barbeirosError
+  } = useQuery({
     queryKey: ['barbeiros'],
     queryFn: barbeirosApi.listar
   });
 
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(currentWeek, i));
 
-  const agendamentosFiltrados = agendamentos.filter(a => 
+  const agendamentosFiltrados = agendamentos.filter(a =>
     barbeiroFiltro === "todos" || a.barbeiroId === barbeiroFiltro
   );
 
   const getAgendamentosDoDia = (dia) => {
-    return agendamentosFiltrados.filter(a => 
-      isSameDay(new Date(a.data), dia)
-    ).sort((a, b) => a.horario.localeCompare(b.horario));
+    return agendamentosFiltrados
+      .filter(a => isSameDay(new Date(a.data), dia))
+      .sort((a, b) => a.horario.localeCompare(b.horario));
   };
 
   const statusColors = {
@@ -38,6 +47,23 @@ export default function Agenda() {
     concluido: "bg-purple-500/20 text-purple-400 border-purple-500/30",
     cancelado: "bg-red-500/20 text-red-400 border-red-500/30",
   };
+
+  // 🆕 Exibição de carregamento e erros globais
+  if (agendamentosLoading || barbeirosLoading) {
+    return (
+      <div className="text-center text-zinc-400 mt-10">
+        <p>Carregando agenda...</p>
+      </div>
+    );
+  }
+
+  if (agendamentosError || barbeirosError) {
+    return (
+      <div className="text-center text-red-500 mt-10">
+        <p>Erro ao carregar dados da agenda. Tente novamente mais tarde.</p>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -74,7 +100,7 @@ export default function Agenda() {
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
-          
+
           <h2 className="text-xl font-semibold text-white">
             {format(currentWeek, "MMMM yyyy", { locale: ptBR })}
           </h2>
