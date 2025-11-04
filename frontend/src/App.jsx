@@ -1,16 +1,16 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AuthProvider } from '../../frontend/src/contexts/AuthContext';
-import ProtectedRoute from '../../frontend/src/components/ProtectedRoute';
+import { AuthProvider } from './contexts/AuthContext.jsx';
+import ProtectedRoute from './components/ProtectedRoute.jsx';
 
-import Login from '../../frontend/src/pages/Login';
-import Dashboard from '../../frontend/src/pages/Dashboard';
-import Agenda from '../../frontend/src/pages/Agenda';
-import Barbeiros from '../../frontend/src/pages/Barbeiros';
-import Servicos from '../../frontend/src/pages/Servicos';
-import NovoAgendamento from '../../frontend/src/pages/NovoAgendamento';
-import MeusAgendamentos from '../../frontend/src/pages/MeusAgendamentos';
+import Login from './pages/Login.jsx';
+import Dashboard from './pages/Dashboard.jsx';
+import Agenda from './pages/Agenda.jsx';
+import Barbeiros from './pages/Barbeiros.jsx';
+import Servicos from './pages/Servicos.jsx';
+import NovoAgendamento from './pages/NovoAgendamento.jsx';
+import MeusAgendamentos from './pages/MeusAgendamentos.jsx';
 
 const queryClient = new QueryClient({
   defaultOptions: {
