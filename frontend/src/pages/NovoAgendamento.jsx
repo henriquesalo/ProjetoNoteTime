@@ -7,7 +7,7 @@ import { Calendar, CheckCircle } from 'lucide-react';
 export default function NovoAgendamento() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  
+
   const [formData, setFormData] = useState({
     clienteNome: '',
     clienteEmail: '',
@@ -18,7 +18,21 @@ export default function NovoAgendamento() {
     horario: '',
     observacoes: ''
   });
+  //formartar telefone 
+  const formatarTelefone = (valor) => {
+    const apenasNums = valor.replace(/\D/g, "");
 
+    if (apenasNums.length <= 10) {
+      return apenasNums
+        .replace(/(\d{2})(\d)/, "($1) $2")
+        .replace(/(\d{4})(\d)/, "$1-$2");
+    }
+
+    return apenasNums
+      .replace(/(\d{2})(\d)/, "($1) $2")
+      .replace(/(\d{5})(\d)/, "$1-$2");
+  };
+ 
   const { data: barbeiros = [] } = useQuery({
     queryKey: ['barbeiros'],
     queryFn: barbeirosApi.listar
@@ -73,7 +87,7 @@ export default function NovoAgendamento() {
                 <input
                   type="text"
                   value={formData.clienteNome}
-                  onChange={(e) => setFormData({...formData, clienteNome: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, clienteNome: e.target.value })}
                   className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-white"
                   required
                 />
@@ -85,7 +99,7 @@ export default function NovoAgendamento() {
                   <input
                     type="email"
                     value={formData.clienteEmail}
-                    onChange={(e) => setFormData({...formData, clienteEmail: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, clienteEmail: e.target.value })}
                     className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-white"
                     required
                   />
@@ -96,7 +110,13 @@ export default function NovoAgendamento() {
                   <input
                     type="tel"
                     value={formData.clienteTelefone}
-                    onChange={(e) => setFormData({...formData, clienteTelefone: e.target.value})}
+                    maxLength={15}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        clienteTelefone: formatarTelefone(e.target.value)
+                      })
+                    }
                     className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-white"
                     required
                   />
@@ -113,7 +133,7 @@ export default function NovoAgendamento() {
                 <label className="block text-zinc-300 mb-2 text-sm">Serviço</label>
                 <select
                   value={formData.servicoId}
-                  onChange={(e) => setFormData({...formData, servicoId: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, servicoId: e.target.value })}
                   className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-white"
                   required
                 >
@@ -130,7 +150,7 @@ export default function NovoAgendamento() {
                 <label className="block text-zinc-300 mb-2 text-sm">Barbeiro</label>
                 <select
                   value={formData.barbeiroId}
-                  onChange={(e) => setFormData({...formData, barbeiroId: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, barbeiroId: e.target.value })}
                   className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-white"
                   required
                 >
@@ -155,7 +175,7 @@ export default function NovoAgendamento() {
                   <input
                     type="date"
                     value={formData.data}
-                    onChange={(e) => setFormData({...formData, data: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, data: e.target.value })}
                     className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-white"
                     min={new Date().toISOString().split('T')[0]}
                     required
@@ -166,7 +186,7 @@ export default function NovoAgendamento() {
                   <label className="block text-zinc-300 mb-2 text-sm">Horário</label>
                   <select
                     value={formData.horario}
-                    onChange={(e) => setFormData({...formData, horario: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, horario: e.target.value })}
                     className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-white"
                     required
                   >
@@ -182,7 +202,7 @@ export default function NovoAgendamento() {
                 <label className="block text-zinc-300 mb-2 text-sm">Observações</label>
                 <textarea
                   value={formData.observacoes}
-                  onChange={(e) => setFormData({...formData, observacoes: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
                   className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-white"
                   rows="3"
                 />
@@ -195,7 +215,7 @@ export default function NovoAgendamento() {
         <div>
           <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl p-6 sticky top-6">
             <h2 className="text-xl font-bold text-white mb-4">Resumo</h2>
-            
+
             {servicoSelecionado && (
               <div className="space-y-3 text-white mb-6">
                 <div>
