@@ -11,8 +11,7 @@ funcionem corretamente.
 
 Antes de iniciar, verifique se você possui instalado na sua máquina:
 
--   **Docker**\
--   **Docker Compose**
+-   **Docker**
 -   **PostgreSQL**
 -   **Node.js** (versão recomendada: LTS)
 
