@@ -168,4 +168,19 @@ export class AgendamentoRepository {
     combined.setHours(parseInt(horas), parseInt(minutos), 0, 0);
     return combined;
   }
+  async listarPorBarbeiro(barbeiroId) {
+    return await prisma.appointment.findMany({
+      where: {
+        barberId
+      },
+      include: {
+        client: true,
+        barber: true,
+        service: true
+      },
+      orderBy: {
+        scheduledDate: 'desc'
+      }
+    });
+  }
 }
