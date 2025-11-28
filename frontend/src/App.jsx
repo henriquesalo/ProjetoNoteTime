@@ -9,6 +9,7 @@ import Dashboard from './pages/Dashboard.jsx';
 import Agenda from './pages/Agenda.jsx';
 import Barbeiros from './pages/Barbeiros.jsx';
 import Servicos from './pages/Servicos.jsx';
+import Clientes from './pages/Clientes.jsx';
 import NovoAgendamento from './pages/NovoAgendamento.jsx';
 import MeusAgendamentos from './pages/MeusAgendamentos.jsx';
 
@@ -34,6 +35,7 @@ function App() {
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/agenda" element={<ProtectedRoute><Agenda /></ProtectedRoute>} />
             <Route path="/barbeiros" element={<ProtectedRoute><Barbeiros /></ProtectedRoute>} />
+            <Route path="/clientes" element={<ProtectedRoute><Clientes /></ProtectedRoute>} />
             <Route path="/servicos" element={<ProtectedRoute><Servicos /></ProtectedRoute>} />
             <Route path="/novo-agendamento" element={<ProtectedRoute><NovoAgendamento /></ProtectedRoute>} />
             <Route path="/meus-agendamentos" element={<ProtectedRoute><MeusAgendamentos /></ProtectedRoute>} />

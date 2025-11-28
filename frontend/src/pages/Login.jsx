@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext.jsx';
-import { Scissors, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { Scissors, AlertCircle } from 'lucide-react';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -9,7 +9,6 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({ email: '', senha: '' });
-  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -53,7 +52,6 @@ export default function Login() {
 
           {/* Formulário */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email */}
             <div>
               <label className="block text-zinc-300 mb-2 text-sm font-medium">Email</label>
               <input
@@ -63,37 +61,25 @@ export default function Login() {
                 className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                 placeholder="seu@email.com"
                 required
-                autoFocus
               />
             </div>
 
-            {/* Senha com mostrar/ocultar */}
             <div>
               <label className="block text-zinc-300 mb-2 text-sm font-medium">Senha</label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={formData.senha}
-                  onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
-                  className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500 pr-10"
-                  placeholder="••••••••"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute top-1/2 right-3 -translate-y-1/2 text-zinc-400 hover:text-white"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
+              <input
+                type="password"
+                value={formData.senha}
+                onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
+                className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                placeholder="••••••••"
+                required
+              />
             </div>
 
-            {/* Botão Entrar */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold py-3 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold py-3 rounded-lg transition-all disabled:opacity-50"
             >
               {loading ? 'Entrando...' : 'Entrar'}
             </button>

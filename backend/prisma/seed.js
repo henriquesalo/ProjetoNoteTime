@@ -3,8 +3,11 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
+<<<<<<< HEAD
 import 'dotenv/config';
 
+=======
+>>>>>>> origin/pedrolucas
 
 const prisma = new PrismaClient();
 
@@ -17,6 +20,10 @@ async function main() {
   await prisma.notification.deleteMany();
   await prisma.auditLog.deleteMany();
   await prisma.session.deleteMany();
+<<<<<<< HEAD
+=======
+  await prisma.appointmentService.deleteMany();
+>>>>>>> origin/pedrolucas
   await prisma.appointment.deleteMany();
   await prisma.service.deleteMany();
   await prisma.client.deleteMany();
@@ -223,6 +230,18 @@ async function main() {
       status: 'CONFIRMED',
       observations: 'Cliente preferiu máquina 2',
       createdBy: admin.id,
+<<<<<<< HEAD
+=======
+      services: {
+        create: [
+          {
+            serviceId: servicos[0].id,
+            price: Number(servicos[0].price),
+            durationMinutes: servicos[0].durationMinutes
+          }
+        ]
+      }
+>>>>>>> origin/pedrolucas
     },
   });
 
@@ -240,6 +259,18 @@ async function main() {
       scheduledDate: agendamento2Date,
       status: 'SCHEDULED',
       createdBy: admin.id,
+<<<<<<< HEAD
+=======
+      services: {
+        create: [
+          {
+            serviceId: servicos[1].id,
+            price: Number(servicos[1].price),
+            durationMinutes: servicos[1].durationMinutes
+          }
+        ]
+      }
+>>>>>>> origin/pedrolucas
     },
   });
 
@@ -257,6 +288,18 @@ async function main() {
       scheduledDate: agendamento3Date,
       status: 'SCHEDULED',
       createdBy: admin.id,
+<<<<<<< HEAD
+=======
+      services: {
+        create: [
+          {
+            serviceId: servicos[2].id,
+            price: Number(servicos[2].price),
+            durationMinutes: servicos[2].durationMinutes
+          }
+        ]
+      }
+>>>>>>> origin/pedrolucas
     },
   });
 
@@ -274,6 +317,18 @@ async function main() {
       scheduledDate: agendamento4Date,
       status: 'CONFIRMED',
       createdBy: admin.id,
+<<<<<<< HEAD
+=======
+      services: {
+        create: [
+          {
+            serviceId: servicos[3].id,
+            price: Number(servicos[3].price),
+            durationMinutes: servicos[3].durationMinutes
+          }
+        ]
+      }
+>>>>>>> origin/pedrolucas
     },
   });
 
@@ -292,6 +347,18 @@ async function main() {
       status: 'SCHEDULED',
       observations: 'Filho de 8 anos',
       createdBy: admin.id,
+<<<<<<< HEAD
+=======
+      services: {
+        create: [
+          {
+            serviceId: servicos[4].id,
+            price: Number(servicos[4].price),
+            durationMinutes: servicos[4].durationMinutes
+          }
+        ]
+      }
+>>>>>>> origin/pedrolucas
     },
   });
 

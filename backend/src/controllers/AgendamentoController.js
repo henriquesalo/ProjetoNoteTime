@@ -37,7 +37,17 @@ export class AgendamentoController {
 
   async criar(req, res) {
     try {
-      const { clienteNome, clienteEmail, clienteTelefone, barbeiroId, servicoId, data, horario, observacoes } = req.body;
+      const {
+        clienteNome,
+        clienteEmail,
+        clienteTelefone,
+        barbeiroId,
+        servicoId,
+        servicosIds = [],
+        data,
+        horario,
+        observacoes
+      } = req.body;
 
       // Validar barbeiro
       const barbeiro = await barbeiroRepo.buscarPorId(barbeiroId);
@@ -45,10 +55,31 @@ export class AgendamentoController {
         return res.status(400).json({ success: false, error: 'Barbeiro não encontrado ou inativo' });
       }
 
-      // Validar serviço
-      const servico = await servicoRepo.buscarPorId(servicoId);
-      if (!servico || !servico.ativo) {
-        return res.status(400).json({ success: false, error: 'Serviço não encontrado ou inativo' });
+      // Validar serviços
+      const listaServicosIds = Array.isArray(servicosIds)
+        ? servicosIds.filter(Boolean)
+        : [];
+
+      if (servicoId && !listaServicosIds.includes(servicoId)) {
+        listaServicosIds.push(servicoId);
+      }
+
+      if (listaServicosIds.length === 0) {
+        return res.status(400).json({ success: false, error: 'Selecione pelo menos um serviço' });
+      }
+
+      const servicos = await servicoRepo.buscarPorIds(listaServicosIds);
+
+      if (servicos.length !== listaServicosIds.length) {
+        return res.status(400).json({ success: false, error: 'Um ou mais serviços não foram encontrados' });
+      }
+
+      const servicosInativos = servicos.filter(servico => !servico.ativo);
+      if (servicosInativos.length > 0) {
+        return res.status(400).json({
+          success: false,
+          error: `Os serviços ${servicosInativos.map(s => s.nome).join(', ')} estão inativos`
+        });
       }
 
       // Criar agendamento
@@ -59,13 +90,10 @@ export class AgendamentoController {
         clienteTelefone,
         barbeiroId: barbeiro.id,
         barbeiroNome: barbeiro.nome,
-        servicoId: servico.id,
-        servicoNome: servico.nome,
+        servicos,
         data: new Date(data),
         horario,
         status: 'pendente',
-        preco: servico.preco,
-        duracaoMinutos: servico.duracaoMinutos,
         observacoes
       });
 
@@ -78,8 +106,8 @@ export class AgendamentoController {
         data: agendamento.data,
         horario,
         barbeiro: barbeiro.nome,
-        servico: servico.nome,
-        preco: servico.preco
+        servicos: agendamento.servicos,
+        precoTotal: agendamento.preco
       });
 
       res.status(201).json({ success: true, data: agendamento });
@@ -125,7 +153,7 @@ export class AgendamentoController {
         data: agendamento.data,
         horario: agendamento.horario,
         barbeiro: agendamento.barbeiroNome,
-        servico: agendamento.servicoNome
+        servicos: agendamento.servicos
       });
 
       res.json({ success: true, message: 'Agendamento cancelado' });

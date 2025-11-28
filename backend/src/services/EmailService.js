@@ -13,8 +13,20 @@ export class EmailService {
     });
   }
 
-  async enviarConfirmacao({ para, nomeCliente, data, horario, barbeiro, servico, preco }) {
+  async enviarConfirmacao({ para, nomeCliente, data, horario, barbeiro, servicos = [], precoTotal }) {
     const dataFormatada = new Date(data).toLocaleDateString('pt-BR');
+    const listaServicos = servicos.length
+      ? `<ul style="padding-left: 16px; margin: 8px 0;">
+          ${servicos.map(servico => {
+            const preco = Number(servico.preco ?? 0).toFixed(2);
+            const duracao = servico.duracaoMinutos ?? 0;
+            return `<li>${servico.nome} - ${duracao} min - R$ ${preco}</li>`;
+          }).join('')}
+        </ul>`
+      : '<p>Serviço selecionado no sistema.</p>';
+    const valorTotal = typeof precoTotal === 'number'
+      ? `<p><strong>💰 Valor total:</strong> R$ ${precoTotal.toFixed(2)}</p>`
+      : '';
     
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -27,8 +39,11 @@ export class EmailService {
           <p><strong>📅 Data:</strong> ${dataFormatada}</p>
           <p><strong>🕐 Horário:</strong> ${horario}</p>
           <p><strong>💈 Barbeiro:</strong> ${barbeiro}</p>
-          <p><strong>✂️ Serviço:</strong> ${servico}</p>
-          <p><strong>💰 Valor:</strong> R$ ${preco.toFixed(2)}</p>
+          <div>
+            <p><strong>✂️ Serviços:</strong></p>
+            ${listaServicos}
+          </div>
+          ${valorTotal}
         </div>
         
         <p>Aguardamos você!</p>
@@ -44,8 +59,13 @@ export class EmailService {
     });
   }
 
-  async enviarCancelamento({ para, nomeCliente, data, horario, barbeiro, servico }) {
+  async enviarCancelamento({ para, nomeCliente, data, horario, barbeiro, servicos = [] }) {
     const dataFormatada = new Date(data).toLocaleDateString('pt-BR');
+    const listaServicos = servicos.length
+      ? `<ul style="padding-left: 16px; margin: 8px 0;">
+          ${servicos.map(servico => `<li>${servico.nome}</li>`).join('')}
+        </ul>`
+      : '<p>Serviço selecionado no sistema.</p>';
     
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -57,7 +77,10 @@ export class EmailService {
           <p><strong>📅 Data:</strong> ${dataFormatada}</p>
           <p><strong>🕐 Horário:</strong> ${horario}</p>
           <p><strong>💈 Barbeiro:</strong> ${barbeiro}</p>
-          <p><strong>✂️ Serviço:</strong> ${servico}</p>
+          <div>
+            <p><strong>✂️ Serviços:</strong></p>
+            ${listaServicos}
+          </div>
         </div>
         
         <p>Esperamos vê-lo em breve!</p>

@@ -138,4 +138,19 @@ export const servicosApi = {
   }
 };
 
+// Clientes
+export const clientesApi = {
+  listar: async (search) => {
+    const response = await api.get('/clientes', {
+      params: search ? { search } : undefined
+    });
+    return response.data.data;
+  },
+
+  criar: async (dados) => {
+    const response = await api.post('/clientes', dados);
+    return response.data.data;
+  }
+};
+
 export default api;

@@ -35,5 +35,9 @@
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.16",
     "vite": "^7.1.7"
-  }
+  },
+  "description": "",
+  "main": "eslint.config.js",
+  "author": "",
+  "license": "ISC"
 }

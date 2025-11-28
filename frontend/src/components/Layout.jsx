@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Calendar, LayoutDashboard, Clock, Users, Scissors, LogOut, Menu } from 'lucide-react';
+import { Calendar, LayoutDashboard, Clock, Users, Scissors, LogOut, Menu, UserRound } from 'lucide-react';
 
 const navigationItems = [
   { title: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
@@ -9,6 +9,7 @@ const navigationItems = [
   { title: "Novo Agendamento", path: "/novo-agendamento", icon: Clock },
   { title: "Meus Agendamentos", path: "/meus-agendamentos", icon: Calendar },
   { title: "Barbeiros", path: "/barbeiros", icon: Users },
+  { title: "Clientes", path: "/clientes", icon: UserRound },
   { title: "Serviços", path: "/servicos", icon: Scissors },
 ];
 
@@ -43,32 +44,26 @@ export default function Layout({ children }) {
         {/* Menu */}
         <nav className="flex-1 p-3">
           <ul className="space-y-1">
-            {navigationItems
-              .filter(item => {
-                // Se for BARBER, esconde a página
-                if (user?.role === "BARBER" && item.path === "/novo-agendamento") {
-                  return false;
-                }
-                return true;
-              })
-              .map((item) => {
-                const Icon = item.icon;
-                const isActive = location.pathname === item.path;
-                return (
-                  <li key={item.path}>
-                    <Link
-                      to={item.path}
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${isActive
-                          ? 'bg-amber-500/10 text-amber-500 border-l-2 border-amber-500'
-                          : 'text-zinc-300 hover:bg-zinc-700 hover:text-amber-500'
-                        }`}
-                    >
-                      <Icon className="w-4 h-4" />
-                      <span className="font-medium">{item.title}</span>
-                    </Link>
-                  </li>
-                );
-              })}
+            {navigationItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = location.pathname === item.path;
+              
+              return (
+                <li key={item.path}>
+                  <Link
+                    to={item.path}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+                      isActive
+                        ? 'bg-amber-500/10 text-amber-500 border-l-2 border-amber-500'
+                        : 'text-zinc-300 hover:bg-zinc-700 hover:text-amber-500'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span className="font-medium">{item.title}</span>
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </nav>
 

@@ -4,6 +4,30 @@ import { randomUUID } from 'crypto';
 
 const prisma = new PrismaClient();
 
+function mapServicos(data) {
+  const relacoes = data.services?.length ? data.services : [];
+
+  if (relacoes.length > 0) {
+    return relacoes.map((item) => ({
+      id: item.service.id,
+      nome: item.service.name,
+      preco: Number(item.price ?? item.service.price),
+      duracaoMinutos: item.durationMinutes ?? item.service.durationMinutes
+    }));
+  }
+
+  if (data.service) {
+    return [{
+      id: data.service.id,
+      nome: data.service.name,
+      preco: Number(data.service.price),
+      duracaoMinutos: data.service.durationMinutes
+    }];
+  }
+
+  return [];
+}
+
 export class AgendamentoRepository {
   async buscarPorId(id) {
     const data = await prisma.appointment.findUnique({
@@ -11,11 +35,16 @@ export class AgendamentoRepository {
       include: {
         client: true,
         barber: true,
-        service: true
+        service: true,
+        services: {
+          include: { service: true }
+        }
       }
     });
 
     if (!data) return null;
+
+    const servicos = mapServicos(data);
 
     return new Agendamento({
       id: data.id,
@@ -24,13 +53,14 @@ export class AgendamentoRepository {
       clienteTelefone: data.client.phone,
       barbeiroId: data.barber.id,
       barbeiroNome: data.barber.name,
-      servicoId: data.service.id,
-      servicoNome: data.service.name,
+      servicos,
+      servicoId: servicos[0]?.id || data.service?.id || null,
+      servicoNome: servicos.length ? undefined : data.service?.name,
       data: data.scheduledDate,
       horario: this.extrairHorario(data.scheduledDate),
       status: data.status.toLowerCase(),
-      preco: Number(data.service.price),
-      duracaoMinutos: data.service.durationMinutes,
+      preco: servicos.length ? undefined : Number(data.service?.price || 0),
+      duracaoMinutos: servicos.length ? undefined : data.service?.durationMinutes,
       observacoes: data.observations
     });
   }
@@ -40,30 +70,42 @@ export class AgendamentoRepository {
       include: {
         client: true,
         barber: true,
-        service: true
+        service: true,
+        services: {
+          include: { service: true }
+        }
       },
       orderBy: { scheduledDate: 'desc' }
     });
 
-    return appointments.map(data => new Agendamento({
-      id: data.id,
-      clienteNome: data.client.name,
-      clienteEmail: data.client.email || '',
-      clienteTelefone: data.client.phone,
-      barbeiroId: data.barber.id,
-      barbeiroNome: data.barber.name,
-      servicoId: data.service.id,
-      servicoNome: data.service.name,
-      data: data.scheduledDate,
-      horario: this.extrairHorario(data.scheduledDate),
-      status: data.status.toLowerCase(),
-      preco: Number(data.service.price),
-      duracaoMinutos: data.service.durationMinutes,
-      observacoes: data.observations
-    }));
+    return appointments.map(data => {
+      const servicos = mapServicos(data);
+
+      return new Agendamento({
+        id: data.id,
+        clienteNome: data.client.name,
+        clienteEmail: data.client.email || '',
+        clienteTelefone: data.client.phone,
+        barbeiroId: data.barber.id,
+        barbeiroNome: data.barber.name,
+        servicos,
+        servicoId: servicos[0]?.id || data.service?.id || null,
+        servicoNome: servicos.length ? undefined : data.service?.name,
+        data: data.scheduledDate,
+        horario: this.extrairHorario(data.scheduledDate),
+        status: data.status.toLowerCase(),
+        preco: servicos.length ? undefined : Number(data.service?.price || 0),
+        duracaoMinutos: servicos.length ? undefined : data.service?.durationMinutes,
+        observacoes: data.observations
+      });
+    });
   }
 
   async criar(agendamento) {
+    if (!agendamento.servicos || agendamento.servicos.length === 0) {
+      throw new Error('Agendamento precisa conter pelo menos um serviço');
+    }
+
     // Buscar ou criar cliente
     let client = await prisma.client.findFirst({
       where: { phone: agendamento.clienteTelefone }
@@ -89,12 +131,19 @@ export class AgendamentoRepository {
         id: agendamento.id,
         clientId: client.id,
         barberId: agendamento.barbeiroId,
-        serviceId: agendamento.servicoId,
+        serviceId: agendamento.servicos[0].id,
         unitId: barber.unitId,
         scheduledDate: this.combinarDataHora(agendamento.data, agendamento.horario),
         status: agendamento.status.toUpperCase(),
         observations: agendamento.observacoes,
-        createdBy: agendamento.barbeiroId
+        createdBy: agendamento.barbeiroId,
+        services: {
+          create: agendamento.servicos.map((servico) => ({
+            serviceId: servico.id,
+            price: servico.preco,
+            durationMinutes: servico.duracaoMinutos
+          }))
+        }
       }
     });
   }

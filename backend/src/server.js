@@ -7,6 +7,7 @@ import { BarbeiroController } from './controllers/BarbeiroController.js';
 import { ServicoController } from './controllers/ServicoController.js';
 import { AuthController } from './controllers/AuthController.js';
 import { authMiddleware, checkRole } from './middlewares/authMiddleware.js';
+import { ClienteController } from './controllers/ClienteController.js';
 
 const app = express();
 
@@ -14,6 +15,7 @@ const app = express();
 const agendamentoController = new AgendamentoController();
 const barbeiroController = new BarbeiroController();
 const servicoController = new ServicoController();
+const clienteController = new ClienteController();
 const authController = new AuthController();
 
 // Middlewares globais
@@ -56,6 +58,10 @@ app.get('/api/servicos/:id', authMiddleware, (req, res) => servicoController.bus
 app.post('/api/servicos', authMiddleware, checkRole('ADMINISTRATOR'), (req, res) => servicoController.criar(req, res));
 app.put('/api/servicos/:id', authMiddleware, checkRole('ADMINISTRATOR'), (req, res) => servicoController.atualizar(req, res));
 app.patch('/api/servicos/:id/toggle', authMiddleware, checkRole('ADMINISTRATOR'), (req, res) => servicoController.toggleAtivo(req, res));
+
+// Clientes (listar qualquer usuário autenticado, cadastro apenas ADMIN)
+app.get('/api/clientes', authMiddleware, (req, res) => clienteController.listar(req, res));
+app.post('/api/clientes', authMiddleware, checkRole('ADMINISTRATOR'), (req, res) => clienteController.criar(req, res));
 
 app.use((req, res) => {
   res.status(404).json({

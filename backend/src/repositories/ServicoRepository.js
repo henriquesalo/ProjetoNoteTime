@@ -49,6 +49,32 @@ export class ServicoRepository {
     }));
   }
 
+  async buscarPorIds(ids = []) {
+    if (!ids || ids.length === 0) {
+      return [];
+    }
+
+    const servicos = await prisma.service.findMany({
+      where: { id: { in: ids } }
+    });
+
+    const servicosMap = new Map(
+      servicos.map(data => [
+        data.id,
+        new Servico({
+          id: data.id,
+          nome: data.name,
+          descricao: data.description || '',
+          preco: Number(data.price),
+          duracaoMinutos: data.durationMinutes,
+          ativo: data.isActive
+        })
+      ])
+    );
+
+    return ids.map(id => servicosMap.get(id)).filter(Boolean);
+  }
+
   async criar(servico) {
     // Buscar primeira unidade
     const unit = await prisma.unit.findFirst();
