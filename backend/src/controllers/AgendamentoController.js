@@ -12,14 +12,24 @@ const emailService = new EmailService();
 
 export class AgendamentoController {
   async listar(req, res) {
-    try {
-      const agendamentos = await agendamentoRepo.listarTodos();
-      res.json({ success: true, data: agendamentos });
-    } catch (error) {
-      res.status(500).json({ success: false, error: error.message });
-    }
-  }
+  try {
+    const { id, role } = req.user;
+    let agendamentos;
 
+    // Barbeiro 
+    if (role === 'BARBER') {
+      agendamentos = await agendamentoRepo.listarPorBarbeiro(id);
+    } 
+    // Admin
+    else {
+      agendamentos = await agendamentoRepo.listarTodos();
+    }
+
+    res.json({ success: true, data: agendamentos });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+}
   async buscar(req, res) {
     try {
       const { id } = req.params;
