@@ -1,14 +1,20 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext.jsx';
-import { Scissors, AlertCircle } from 'lucide-react';
+import { Scissors, AlertCircle, Eye, EyeOff } from 'lucide-react';
 
 export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [formData, setFormData] = useState({ email: '', senha: '' });
+  const [mostrarSenha, setMostrarSenha] = useState(false);
+
+  const [formData, setFormData] = useState({
+    email: '',
+    senha: ''
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,7 +25,8 @@ export default function Login() {
       await login(formData.email, formData.senha);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.error || 'Erro ao fazer login');
+      setError(err.response?.data?.error || 'Email ou senha inválidos');
+      // erro permanece na tela
     } finally {
       setLoading(false);
     }
@@ -29,6 +36,7 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 p-4">
       <div className="w-full max-w-md">
         <div className="bg-zinc-800 p-8 rounded-2xl shadow-2xl border border-zinc-700">
+          
           {/* Logo */}
           <div className="flex justify-center mb-8">
             <div className="w-20 h-20 bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl flex items-center justify-center shadow-lg">
@@ -53,11 +61,15 @@ export default function Login() {
           {/* Formulário */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-zinc-300 mb-2 text-sm font-medium">Email</label>
+              <label className="block text-zinc-300 mb-2 text-sm font-medium">
+                Email
+              </label>
               <input
                 type="email"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
                 className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                 placeholder="seu@email.com"
                 required
@@ -65,15 +77,30 @@ export default function Login() {
             </div>
 
             <div>
-              <label className="block text-zinc-300 mb-2 text-sm font-medium">Senha</label>
-              <input
-                type="password"
-                value={formData.senha}
-                onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
-                className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
-                placeholder="••••••••"
-                required
-              />
+              <label className="block text-zinc-300 mb-2 text-sm font-medium">
+                Senha
+              </label>
+
+              <div className="relative">
+                <input
+                  type={mostrarSenha ? 'text' : 'password'}
+                  value={formData.senha}
+                  onChange={(e) =>
+                    setFormData({ ...formData, senha: e.target.value })
+                  }
+                  className="w-full px-4 py-3 pr-10 bg-zinc-900 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  placeholder="••••••••"
+                  required
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setMostrarSenha(!mostrarSenha)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
+                >
+                  {mostrarSenha ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
 
             <button
