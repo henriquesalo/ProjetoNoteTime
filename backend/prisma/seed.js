@@ -3,11 +3,6 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
-<<<<<<< HEAD
-import 'dotenv/config';
-
-=======
->>>>>>> origin/pedrolucas
 
 const prisma = new PrismaClient();
 
@@ -20,10 +15,7 @@ async function main() {
   await prisma.notification.deleteMany();
   await prisma.auditLog.deleteMany();
   await prisma.session.deleteMany();
-<<<<<<< HEAD
-=======
   await prisma.appointmentService.deleteMany();
->>>>>>> origin/pedrolucas
   await prisma.appointment.deleteMany();
   await prisma.service.deleteMany();
   await prisma.client.deleteMany();
@@ -230,8 +222,6 @@ async function main() {
       status: 'CONFIRMED',
       observations: 'Cliente preferiu máquina 2',
       createdBy: admin.id,
-<<<<<<< HEAD
-=======
       services: {
         create: [
           {
@@ -241,7 +231,6 @@ async function main() {
           }
         ]
       }
->>>>>>> origin/pedrolucas
     },
   });
 
@@ -259,8 +248,6 @@ async function main() {
       scheduledDate: agendamento2Date,
       status: 'SCHEDULED',
       createdBy: admin.id,
-<<<<<<< HEAD
-=======
       services: {
         create: [
           {
@@ -270,7 +257,6 @@ async function main() {
           }
         ]
       }
->>>>>>> origin/pedrolucas
     },
   });
 
@@ -288,8 +274,6 @@ async function main() {
       scheduledDate: agendamento3Date,
       status: 'SCHEDULED',
       createdBy: admin.id,
-<<<<<<< HEAD
-=======
       services: {
         create: [
           {
@@ -299,7 +283,6 @@ async function main() {
           }
         ]
       }
->>>>>>> origin/pedrolucas
     },
   });
 
@@ -317,8 +300,6 @@ async function main() {
       scheduledDate: agendamento4Date,
       status: 'CONFIRMED',
       createdBy: admin.id,
-<<<<<<< HEAD
-=======
       services: {
         create: [
           {
@@ -328,7 +309,6 @@ async function main() {
           }
         ]
       }
->>>>>>> origin/pedrolucas
     },
   });
 
@@ -347,8 +327,6 @@ async function main() {
       status: 'SCHEDULED',
       observations: 'Filho de 8 anos',
       createdBy: admin.id,
-<<<<<<< HEAD
-=======
       services: {
         create: [
           {
@@ -358,7 +336,6 @@ async function main() {
           }
         ]
       }
->>>>>>> origin/pedrolucas
     },
   });
 

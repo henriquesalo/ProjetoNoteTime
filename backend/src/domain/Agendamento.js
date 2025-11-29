@@ -11,7 +11,7 @@ export class Agendamento {
     servicos = [],
     data,
     horario,
-    status = 'pendente',
+    status = 'scheduled',
     preco,
     precoTotal = null,
     duracaoMinutos,
@@ -54,20 +54,20 @@ export class Agendamento {
   }
 
   confirmar() {
-    if (this.status !== 'pendente') {
-      throw new Error('Apenas agendamentos pendentes podem ser confirmados');
+    if (this.status !== 'scheduled') {
+      throw new Error('Apenas agendamentos agendados podem ser confirmados');
     }
-    this.status = 'confirmado';
+    this.status = 'confirmed';
   }
 
   cancelar() {
-    if (!['pendente', 'confirmado'].includes(this.status)) {
+    if (!['scheduled', 'confirmed'].includes(this.status)) {
       throw new Error('Agendamento não pode ser cancelado');
     }
-    this.status = 'cancelado';
+    this.status = 'cancelled';
   }
 
   podeSerCancelado() {
-    return ['pendente', 'confirmado'].includes(this.status);
+    return ['scheduled', 'confirmed'].includes(this.status);
   }
 }

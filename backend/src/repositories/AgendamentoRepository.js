@@ -169,18 +169,37 @@ export class AgendamentoRepository {
     return combined;
   }
   async listarPorBarbeiro(barbeiroId) {
-    return await prisma.appointment.findMany({
-      where: {
-        barberId
-      },
+    const appointments = await prisma.appointment.findMany({
+      where: { barberId },
       include: {
         client: true,
         barber: true,
-        service: true
+        service: true,
+        services: { include: { service: true } }
       },
-      orderBy: {
-        scheduledDate: 'desc'
-      }
+      orderBy: { scheduledDate: 'desc' }
+    });
+
+    return appointments.map(data => {
+      const servicos = mapServicos(data);
+
+      return new Agendamento({
+        id: data.id,
+        clienteNome: data.client.name,
+        clienteEmail: data.client.email || '',
+        clienteTelefone: data.client.phone,
+        barbeiroId: data.barber.id,
+        barbeiroNome: data.barber.name,
+        servicos,
+        servicoId: servicos[0]?.id || data.service?.id || null,
+        servicoNome: servicos.length ? undefined : data.service?.name,
+        data: data.scheduledDate,
+        horario: this.extrairHorario(data.scheduledDate),
+        status: data.status.toLowerCase(),
+        preco: servicos.length ? undefined : Number(data.service?.price || 0),
+        duracaoMinutos: servicos.length ? undefined : data.service?.durationMinutes,
+        observacoes: data.observations
+      });
     });
   }
 }

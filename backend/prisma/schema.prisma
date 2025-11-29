@@ -82,6 +82,7 @@ model Service {
 
   unit         Unit          @relation(fields: [unitId], references: [id])
   appointments Appointment[]
+  appointmentServices AppointmentService[]
 
   @@index([unitId])
   @@index([isActive])
@@ -108,10 +109,7 @@ model Appointment {
   service Service @relation(fields: [serviceId], references: [id])
   unit    Unit    @relation(fields: [unitId], references: [id])
   creator User    @relation("CreatedBy", fields: [createdBy], references: [id])
-<<<<<<< HEAD
-=======
   services AppointmentService[]
->>>>>>> origin/pedrolucas
 
   @@index([barberId, scheduledDate])
   @@index([clientId])
@@ -120,8 +118,6 @@ model Appointment {
   @@map("appointments")
 }
 
-<<<<<<< HEAD
-=======
 model AppointmentService {
   id              String      @id @default(uuid())
   appointmentId   String      @map("appointment_id")
@@ -136,8 +132,6 @@ model AppointmentService {
   @@unique([appointmentId, serviceId])
   @@map("appointment_services")
 }
-
->>>>>>> origin/pedrolucas
 model Session {
   id           String   @id @default(uuid())
   userId       String   @map("user_id")

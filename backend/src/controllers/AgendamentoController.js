@@ -103,22 +103,23 @@ export class AgendamentoController {
         servicos,
         data: new Date(data),
         horario,
-        status: 'pendente',
+        status: 'scheduled',
         observacoes
       });
 
       await agendamentoRepo.criar(agendamento);
 
-      // Enviar email
-      await emailService.enviarConfirmacao({
-        para: clienteEmail,
-        nomeCliente: clienteNome,
-        data: agendamento.data,
-        horario,
-        barbeiro: barbeiro.nome,
-        servicos: agendamento.servicos,
-        precoTotal: agendamento.preco
-      });
+      try {
+        await emailService.enviarConfirmacao({
+          para: clienteEmail,
+          nomeCliente: clienteNome,
+          data: agendamento.data,
+          horario,
+          barbeiro: barbeiro.nome,
+          servicos: agendamento.servicos,
+          precoTotal: agendamento.preco
+        });
+      } catch (_) {}
 
       res.status(201).json({ success: true, data: agendamento });
     } catch (error) {
@@ -156,15 +157,16 @@ export class AgendamentoController {
       agendamento.cancelar();
       await agendamentoRepo.atualizar(agendamento);
 
-      // Enviar email
-      await emailService.enviarCancelamento({
-        para: agendamento.clienteEmail,
-        nomeCliente: agendamento.clienteNome,
-        data: agendamento.data,
-        horario: agendamento.horario,
-        barbeiro: agendamento.barbeiroNome,
-        servicos: agendamento.servicos
-      });
+      try {
+        await emailService.enviarCancelamento({
+          para: agendamento.clienteEmail,
+          nomeCliente: agendamento.clienteNome,
+          data: agendamento.data,
+          horario: agendamento.horario,
+          barbeiro: agendamento.barbeiroNome,
+          servicos: agendamento.servicos
+        });
+      } catch (_) {}
 
       res.json({ success: true, message: 'Agendamento cancelado' });
     } catch (error) {
