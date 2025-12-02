@@ -19,7 +19,6 @@ export default function NovoAgendamento() {
     observacoes: ''
   });
 
-  //  formatação automática de telefone
   const formatarTelefone = (valor) => {
     const nums = valor.replace(/\D/g, '').slice(0, 11);
 
@@ -91,97 +90,138 @@ export default function NovoAgendamento() {
     0
   );
 
-  const horariosDisponiveis = [
-    '08:00', '08:30', '09:00', '09:30',
-    '10:00', '10:30', '11:00', '11:30',
-    '12:00', '12:30', '13:00', '13:30',
-    '14:00', '14:30', '15:00', '15:30',
-    '16:00', '16:30', '17:00', '17:30',
-    '18:00', '18:30'
-  ];
-
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
-          <Calendar className="w-8 h-8 text-amber-500" />
-          Novo Agendamento
-        </h1>
-        <p className="text-zinc-400">
-          Preencha os dados para criar um novo agendamento
-        </p>
-      </div>
+    <div className="max-w-6xl mx-auto p-6">
+      <h1 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+        <Calendar className="w-6 h-6 text-amber-500" />
+        Novo agendamento
+      </h1>
 
-      <form onSubmit={handleSubmit} className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          {/* Dados do Cliente */}
-          <div className="bg-zinc-800 rounded-xl p-6 border border-zinc-700">
-            <h2 className="text-xl font-bold text-white mb-4">
-              Dados do Cliente
+      <form
+        onSubmit={handleSubmit}
+        className="grid lg:grid-cols-[2fr,1fr] gap-6 items-start"
+      >
+        <div className="space-y-6">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-4">
+            <h2 className="text-lg font-semibold text-white mb-2">
+              Dados do cliente
             </h2>
 
-            <div className="space-y-4">
+            <input
+              type="text"
+              placeholder="Nome completo"
+              value={formData.clienteNome}
+              onChange={(e) =>
+                setFormData({ ...formData, clienteNome: e.target.value })
+              }
+              className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-white"
+              required
+            />
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <input
+                type="email"
+                placeholder="Email"
+                value={formData.clienteEmail}
+                onChange={(e) =>
+                  setFormData({ ...formData, clienteEmail: e.target.value })
+                }
+                className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-white"
+              />
+
               <input
                 type="text"
-                placeholder="Nome completo"
-                value={formData.clienteNome}
+                placeholder="Telefone"
+                value={formData.clienteTelefone}
+                onChange={handleTelefoneChange}
+                className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-white"
+              />
+            </div>
+          </div>
+
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-4">
+            <h2 className="text-lg font-semibold text-white mb-2">
+              Detalhes do agendamento
+            </h2>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <input
+                type="date"
+                value={formData.data}
                 onChange={(e) =>
-                  setFormData({ ...formData, clienteNome: e.target.value })
+                  setFormData({ ...formData, data: e.target.value })
                 }
                 className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-white"
                 required
               />
 
-              <div className="grid md:grid-cols-2 gap-4">
-                <input
-                  type="email"
-                  placeholder="Email"
-                  value={formData.clienteEmail}
-                  onChange={(e) =>
-                    setFormData({ ...formData, clienteEmail: e.target.value })
-                  }
-                  className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-white"
-                  required
-                />
-                <input
-                  type="tel"
-                  placeholder="Telefone"
-                  maxLength={15}
-                  value={formData.clienteTelefone}
-                  onChange={handleTelefoneChange}
-                  className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-white"
-                  required
-                />
-              </div>
+              <input
+                type="time"
+                value={formData.horario}
+                onChange={(e) =>
+                  setFormData({ ...formData, horario: e.target.value })
+                }
+                className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-white"
+                required
+              />
             </div>
+
+            <select
+              value={formData.barbeiroId}
+              onChange={(e) =>
+                setFormData({ ...formData, barbeiroId: e.target.value })
+              }
+              className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-white"
+              required
+            >
+              <option value="">Selecione um barbeiro</option>
+              {barbeiros.map((barbeiro) => (
+                <option key={barbeiro.id} value={barbeiro.id}>
+                  {barbeiro.nome}
+                </option>
+              ))}
+            </select>
+
+            <textarea
+              placeholder="Observações (opcional)"
+              value={formData.observacoes}
+              onChange={(e) =>
+                setFormData({ ...formData, observacoes: e.target.value })
+              }
+              className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-white min-h-[80px]"
+            />
           </div>
 
-          {/* Serviços */}
-          <div className="bg-zinc-800 rounded-xl p-6 border border-zinc-700">
-            <h2 className="text-xl font-bold text-white mb-4">Serviços</h2>
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-4">
+            <h2 className="text-lg font-semibold text-white mb-2">
+              Serviços
+            </h2>
 
-            <div className="space-y-3">
-              {servicos.filter(s => s.ativo).map((servico) => {
-                const selecionado =
-                  formData.servicosIds.includes(servico.id);
+            <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
+              {servicos.map((servico) => {
+                const selecionado = formData.servicosIds.includes(servico.id);
 
                 return (
                   <button
-                    type="button"
                     key={servico.id}
+                    type="button"
                     onClick={() => toggleServico(servico.id)}
-                    className={`w-full text-left px-4 py-3 rounded-lg border ${selecionado
-                      ? 'border-amber-500 bg-amber-500/10'
-                      : 'border-zinc-700 bg-zinc-900'
-                      }`}
+                    className={
+                      'w-full flex items-center justify-between px-3 py-2 rounded-lg border text-left ' +
+                      (selecionado
+                        ? 'bg-amber-500/20 border-amber-500 text-white'
+                        : 'bg-zinc-900 border-zinc-700 text-zinc-200')
+                    }
                   >
-                    <div className="flex justify-between">
-                      <span>{servico.nome}</span>
-                      <span>
-                        R$ {servico.preco?.toFixed(2)} •{' '}
+                    <div>
+                      <p className="font-medium">{servico.nome}</p>
+                      <p className="text-xs text-zinc-400">
                         {servico.duracaoMinutos} min
-                      </span>
+                      </p>
                     </div>
+                    <span className="text-sm">
+                      R$ {servico.preco?.toFixed(2)}
+                    </span>
                   </button>
                 );
               })}
@@ -189,7 +229,6 @@ export default function NovoAgendamento() {
           </div>
         </div>
 
-        {/* Resumo */}
         <div>
           <div className="bg-amber-500 rounded-xl p-6 sticky top-6">
             <h2 className="text-xl font-bold text-white mb-4">Resumo</h2>
@@ -204,12 +243,20 @@ export default function NovoAgendamento() {
               Total: R$ {totalPreco.toFixed(2)}
             </p>
 
+            {createAgendamento.isError && (
+              <div className="text-sm text-red-400 mb-2">
+                {createAgendamento.error?.response?.data?.error ||
+                  'Erro ao criar agendamento'}
+              </div>
+            )}
+
             <button
               type="submit"
-              className="w-full bg-white text-amber-600 font-bold py-3 rounded-lg"
+              disabled={createAgendamento.isPending}
+              className="w-full bg-white text-amber-600 font-bold py-3 rounded-lg disabled:opacity-50"
             >
               <CheckCircle className="inline mr-2" />
-              Confirmar Agendamento
+              {createAgendamento.isPending ? 'Salvando...' : 'Confirmar Agendamento'}
             </button>
           </div>
         </div>

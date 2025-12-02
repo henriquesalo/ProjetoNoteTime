@@ -17,32 +17,35 @@ function mapServicos(data) {
   }
 
   if (data.service) {
-    return [{
-      id: data.service.id,
-      nome: data.service.name,
-      preco: Number(data.service.price),
-      duracaoMinutos: data.service.durationMinutes
-    }];
+    return [
+      {
+        id: data.service.id,
+        nome: data.service.name,
+        preco: Number(data.service.price),
+        duracaoMinutos: data.service.durationMinutes
+      }
+    ];
   }
 
   return [];
 }
 
 export class AgendamentoRepository {
-  async buscarPorId(id) {
-    const data = await prisma.appointment.findUnique({
-      where: { id },
-      include: {
-        client: true,
-        barber: true,
-        service: true,
-        services: {
-          include: { service: true }
-        }
-      }
-    });
+  extrairHorario(date) {
+    return date.toISOString().substring(11, 16);
+  }
 
-    if (!data) return null;
+  combinarDataHora(data, horario) {
+    const [horas, minutos] = horario.split(':');
+    const dataObj = new Date(data);
+    dataObj.setHours(Number(horas), Number(minutos), 0, 0);
+    return dataObj;
+  }
+
+  mapOne(data) {
+    if (!data) {
+      return null;
+    }
 
     const servicos = mapServicos(data);
 
@@ -65,6 +68,43 @@ export class AgendamentoRepository {
     });
   }
 
+  mapMany(appointments) {
+    return appointments.map((data) => this.mapOne(data));
+  }
+
+  async buscarPorId(id) {
+    const data = await prisma.appointment.findUnique({
+      where: { id },
+      include: {
+        client: true,
+        barber: true,
+        service: true,
+        services: {
+          include: { service: true }
+        }
+      }
+    });
+
+    return this.mapOne(data);
+  }
+
+  async listarPorBarbeiro(barbeiroId) {
+    const appointments = await prisma.appointment.findMany({
+      where: { barberId: barbeiroId },
+      include: {
+        client: true,
+        barber: true,
+        service: true,
+        services: {
+          include: { service: true }
+        }
+      },
+      orderBy: { scheduledDate: 'desc' }
+    });
+
+    return this.mapMany(appointments);
+  }
+
   async listarTodos() {
     const appointments = await prisma.appointment.findMany({
       include: {
@@ -78,27 +118,7 @@ export class AgendamentoRepository {
       orderBy: { scheduledDate: 'desc' }
     });
 
-    return appointments.map(data => {
-      const servicos = mapServicos(data);
-
-      return new Agendamento({
-        id: data.id,
-        clienteNome: data.client.name,
-        clienteEmail: data.client.email || '',
-        clienteTelefone: data.client.phone,
-        barbeiroId: data.barber.id,
-        barbeiroNome: data.barber.name,
-        servicos,
-        servicoId: servicos[0]?.id || data.service?.id || null,
-        servicoNome: servicos.length ? undefined : data.service?.name,
-        data: data.scheduledDate,
-        horario: this.extrairHorario(data.scheduledDate),
-        status: data.status.toLowerCase(),
-        preco: servicos.length ? undefined : Number(data.service?.price || 0),
-        duracaoMinutos: servicos.length ? undefined : data.service?.durationMinutes,
-        observacoes: data.observations
-      });
-    });
+    return this.mapMany(appointments);
   }
 
   async criar(agendamento) {
@@ -106,9 +126,16 @@ export class AgendamentoRepository {
       throw new Error('Agendamento precisa conter pelo menos um serviço');
     }
 
-    // Buscar ou criar cliente
+    const numsTelefone = agendamento.clienteTelefone?.replace(/\D/g, '') || '';
+    const telefoneNormalizado = numsTelefone;
+
     let client = await prisma.client.findFirst({
-      where: { phone: agendamento.clienteTelefone }
+      where: {
+        OR: [
+          telefoneNormalizado ? { phone: telefoneNormalizado } : null,
+          agendamento.clienteNome ? { name: agendamento.clienteNome } : null
+        ].filter(Boolean)
+      }
     });
 
     if (!client) {
@@ -117,7 +144,16 @@ export class AgendamentoRepository {
           id: randomUUID(),
           name: agendamento.clienteNome,
           email: agendamento.clienteEmail,
-          phone: agendamento.clienteTelefone
+          phone: telefoneNormalizado || null
+        }
+      });
+    } else {
+      client = await prisma.client.update({
+        where: { id: client.id },
+        data: {
+          name: agendamento.clienteNome,
+          email: agendamento.clienteEmail,
+          phone: telefoneNormalizado || client.phone
         }
       });
     }
@@ -126,17 +162,37 @@ export class AgendamentoRepository {
       where: { id: agendamento.barbeiroId }
     });
 
-    await prisma.appointment.create({
+    if (!barber) {
+      throw new Error('Barbeiro não encontrado');
+    }
+
+    const scheduledDate = this.combinarDataHora(agendamento.data, agendamento.horario);
+
+    const conflito = await prisma.appointment.findFirst({
+      where: {
+        barberId: agendamento.barbeiroId,
+        scheduledDate,
+        status: {
+          in: ['SCHEDULED', 'CONFIRMED', 'PRESENT']
+        }
+      }
+    });
+
+    if (conflito) {
+      throw new Error('Já existe um agendamento para este barbeiro neste horário');
+    }
+
+    const created = await prisma.appointment.create({
       data: {
-        id: agendamento.id,
+        id: agendamento.id || randomUUID(),
         clientId: client.id,
         barberId: agendamento.barbeiroId,
         serviceId: agendamento.servicos[0].id,
         unitId: barber.unitId,
-        scheduledDate: this.combinarDataHora(agendamento.data, agendamento.horario),
+        scheduledDate,
         status: agendamento.status.toUpperCase(),
         observations: agendamento.observacoes,
-        createdBy: agendamento.barbeiroId,
+        createdBy: agendamento.usuarioId || agendamento.barbeiroId,
         services: {
           create: agendamento.servicos.map((servico) => ({
             serviceId: servico.id,
@@ -144,8 +200,18 @@ export class AgendamentoRepository {
             durationMinutes: servico.duracaoMinutos
           }))
         }
+      },
+      include: {
+        client: true,
+        barber: true,
+        service: true,
+        services: {
+          include: { service: true }
+        }
       }
     });
+
+    return this.mapOne(created);
   }
 
   async atualizar(agendamento) {
@@ -155,51 +221,6 @@ export class AgendamentoRepository {
         status: agendamento.status.toUpperCase(),
         observations: agendamento.observacoes
       }
-    });
-  }
-
-  extrairHorario(date) {
-    return date.toISOString().substring(11, 16);
-  }
-
-  combinarDataHora(data, horario) {
-    const [horas, minutos] = horario.split(':');
-    const combined = new Date(data);
-    combined.setHours(parseInt(horas), parseInt(minutos), 0, 0);
-    return combined;
-  }
-  async listarPorBarbeiro(barbeiroId) {
-    const appointments = await prisma.appointment.findMany({
-      where: { barberId },
-      include: {
-        client: true,
-        barber: true,
-        service: true,
-        services: { include: { service: true } }
-      },
-      orderBy: { scheduledDate: 'desc' }
-    });
-
-    return appointments.map(data => {
-      const servicos = mapServicos(data);
-
-      return new Agendamento({
-        id: data.id,
-        clienteNome: data.client.name,
-        clienteEmail: data.client.email || '',
-        clienteTelefone: data.client.phone,
-        barbeiroId: data.barber.id,
-        barbeiroNome: data.barber.name,
-        servicos,
-        servicoId: servicos[0]?.id || data.service?.id || null,
-        servicoNome: servicos.length ? undefined : data.service?.name,
-        data: data.scheduledDate,
-        horario: this.extrairHorario(data.scheduledDate),
-        status: data.status.toLowerCase(),
-        preco: servicos.length ? undefined : Number(data.service?.price || 0),
-        duracaoMinutos: servicos.length ? undefined : data.service?.durationMinutes,
-        observacoes: data.observations
-      });
     });
   }
 }
