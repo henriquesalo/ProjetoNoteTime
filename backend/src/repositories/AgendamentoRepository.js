@@ -65,8 +65,11 @@ export class AgendamentoRepository {
     });
   }
 
-  async listarTodos() {
+  async listar(filtros = {}) {
+    const where = this.construirFiltros(filtros);
+
     const appointments = await prisma.appointment.findMany({
+      where,
       include: {
         client: true,
         barber: true,
@@ -158,6 +161,42 @@ export class AgendamentoRepository {
     });
   }
 
+  construirFiltros(filtros) {
+    const where = {};
+
+    if (filtros.status) {
+      // O status vem em minúsculo do frontend, mas o enum do Prisma é em maiúsculo
+      where.status = filtros.status.toUpperCase();
+    }
+
+    if (filtros.dataInicial || filtros.dataFinal) {
+      where.scheduledDate = {};
+
+      if (filtros.dataInicial) {
+        // Filtra agendamentos a partir da data inicial (inclusivo)
+        where.scheduledDate.gte = new Date(filtros.dataInicial);
+      }
+
+      if (filtros.dataFinal) {
+        // Filtra agendamentos até o final do dia da data final (inclusivo)
+        const dataFinal = new Date(filtros.dataFinal);
+        dataFinal.setHours(23, 59, 59, 999);
+        where.scheduledDate.lte = dataFinal;
+      }
+    }
+
+    if (filtros.clienteNome) {
+      where.client = {
+        name: {
+          contains: filtros.clienteNome,
+          mode: 'insensitive'
+        }
+      };
+    }
+
+    return where;
+  }
+
   extrairHorario(date) {
     return date.toISOString().substring(11, 16);
   }
@@ -168,9 +207,11 @@ export class AgendamentoRepository {
     combined.setHours(parseInt(horas), parseInt(minutos), 0, 0);
     return combined;
   }
-  async listarPorBarbeiro(barbeiroId) {
+  async listarPorBarbeiro(barbeiroId, filtros = {}) {
+    const where = this.construirFiltros(filtros);
+
     const appointments = await prisma.appointment.findMany({
-      where: { barberId },
+      where: { ...where, barberId },
       include: {
         client: true,
         barber: true,

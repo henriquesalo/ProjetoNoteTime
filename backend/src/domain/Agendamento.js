@@ -54,17 +54,31 @@ export class Agendamento {
   }
 
   confirmar() {
-    if (this.status !== 'scheduled') {
-      throw new Error('Apenas agendamentos agendados podem ser confirmados');
-    }
-    this.status = 'confirmed';
+    this.alterarStatus('confirmed');
   }
 
   cancelar() {
-    if (!['scheduled', 'confirmed'].includes(this.status)) {
-      throw new Error('Agendamento não pode ser cancelado');
+    this.alterarStatus('cancelled');
+  }
+
+  alterarStatus(novoStatus) {
+    const statusValidos = [
+      'scheduled',
+      'confirmed',
+      'present',
+      'absent',
+      'cancelled',
+      'completed'
+    ];
+
+    if (!statusValidos.includes(novoStatus.toLowerCase())) {
+      throw new Error(`Status inválido: ${novoStatus}`);
     }
-    this.status = 'cancelled';
+
+    // Lógica de transição de status mais rigorosa pode ser adicionada aqui se necessário.
+    // Por enquanto, permitiremos a alteração direta, exceto para cancelamento e confirmação que já existem.
+    
+    this.status = novoStatus.toLowerCase();
   }
 
   podeSerCancelado() {

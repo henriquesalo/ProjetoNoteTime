@@ -41,6 +41,7 @@ app.get('/api/agendamentos', authMiddleware, (req, res) => agendamentoController
 app.get('/api/agendamentos/:id', authMiddleware, (req, res) => agendamentoController.buscar(req, res));
 app.post('/api/agendamentos', authMiddleware, (req, res) => agendamentoController.criar(req, res));
 app.patch('/api/agendamentos/:id/confirmar', authMiddleware, (req, res) => agendamentoController.confirmar(req, res));
+app.patch('/api/agendamentos/:id/status', authMiddleware, (req, res) => agendamentoController.alterarStatus(req, res));
 app.delete('/api/agendamentos/:id', authMiddleware, (req, res) => agendamentoController.cancelar(req, res));
 
 // Barbeiros (qualquer usuário autenticado pode listar, apenas ADMIN pode criar/editar)
