@@ -12,24 +12,25 @@ const emailService = new EmailService();
 
 export class AgendamentoController {
   async listar(req, res) {
-  try {
-    const { id, role } = req.user;
-    let agendamentos;
+    try {
+      const { id, role } = req.user;
+      const filtros = req.query;
+      let agendamentos;
 
-    // Barbeiro 
-    if (role === 'BARBER') {
-      agendamentos = await agendamentoRepo.listarPorBarbeiro(id);
-    } 
-    // Admin
-    else {
-      agendamentos = await agendamentoRepo.listarTodos();
+      // Barbeiro 
+      if (role === 'BARBER') {
+        agendamentos = await agendamentoRepo.listarPorBarbeiro(id, filtros);
+      } 
+      // Admin
+      else {
+        agendamentos = await agendamentoRepo.listar(filtros);
+      }
+
+      res.json({ success: true, data: agendamentos });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
     }
-
-    res.json({ success: true, data: agendamentos });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
   }
-}
   async buscar(req, res) {
     try {
       const { id } = req.params;
@@ -140,6 +141,30 @@ export class AgendamentoController {
       await agendamentoRepo.atualizar(agendamento);
 
       res.json({ success: true, message: 'Agendamento confirmado' });
+    } catch (error) {
+      res.status(400).json({ success: false, error: error.message });
+    }
+  }
+
+  async alterarStatus(req, res) {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+
+      if (!status) {
+        return res.status(400).json({ success: false, error: 'O novo status é obrigatório' });
+      }
+
+      const agendamento = await agendamentoRepo.buscarPorId(id);
+      
+      if (!agendamento) {
+        return res.status(404).json({ success: false, error: 'Agendamento não encontrado' });
+      }
+
+      agendamento.alterarStatus(status);
+      await agendamentoRepo.atualizar(agendamento);
+
+      res.json({ success: true, message: `Status do agendamento alterado para ${status}` });
     } catch (error) {
       res.status(400).json({ success: false, error: error.message });
     }

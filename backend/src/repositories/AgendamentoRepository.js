@@ -68,45 +68,11 @@ export class AgendamentoRepository {
     });
   }
 
-  mapMany(appointments) {
-    return appointments.map((data) => this.mapOne(data));
-  }
+  async listar(filtros = {}) {
+    const where = this.construirFiltros(filtros);
 
-  async buscarPorId(id) {
-    const data = await prisma.appointment.findUnique({
-      where: { id },
-      include: {
-        client: true,
-        barber: true,
-        service: true,
-        services: {
-          include: { service: true }
-        }
-      }
-    });
-
-    return this.mapOne(data);
-  }
-
-  async listarPorBarbeiro(barbeiroId) {
     const appointments = await prisma.appointment.findMany({
-      where: { barberId: barbeiroId },
-      include: {
-        client: true,
-        barber: true,
-        service: true,
-        services: {
-          include: { service: true }
-        }
-      },
-      orderBy: { scheduledDate: 'desc' }
-    });
-
-    return this.mapMany(appointments);
-  }
-
-  async listarTodos() {
-    const appointments = await prisma.appointment.findMany({
+      where,
       include: {
         client: true,
         barber: true,
@@ -221,6 +187,89 @@ export class AgendamentoRepository {
         status: agendamento.status.toUpperCase(),
         observations: agendamento.observacoes
       }
+    });
+  }
+
+  construirFiltros(filtros) {
+    const where = {};
+
+    if (filtros.status) {
+      // O status vem em minúsculo do frontend, mas o enum do Prisma é em maiúsculo
+      where.status = filtros.status.toUpperCase();
+    }
+
+    if (filtros.dataInicial || filtros.dataFinal) {
+      where.scheduledDate = {};
+
+      if (filtros.dataInicial) {
+        // Filtra agendamentos a partir da data inicial (inclusivo)
+        where.scheduledDate.gte = new Date(filtros.dataInicial);
+      }
+
+      if (filtros.dataFinal) {
+        // Filtra agendamentos até o final do dia da data final (inclusivo)
+        const dataFinal = new Date(filtros.dataFinal);
+        dataFinal.setHours(23, 59, 59, 999);
+        where.scheduledDate.lte = dataFinal;
+      }
+    }
+
+    if (filtros.clienteNome) {
+      where.client = {
+        name: {
+          contains: filtros.clienteNome,
+          mode: 'insensitive'
+        }
+      };
+    }
+
+    return where;
+  }
+
+  extrairHorario(date) {
+    return date.toISOString().substring(11, 16);
+  }
+
+  combinarDataHora(data, horario) {
+    const [horas, minutos] = horario.split(':');
+    const combined = new Date(data);
+    combined.setHours(parseInt(horas), parseInt(minutos), 0, 0);
+    return combined;
+  }
+  async listarPorBarbeiro(barbeiroId, filtros = {}) {
+    const where = this.construirFiltros(filtros);
+
+    const appointments = await prisma.appointment.findMany({
+      where: { ...where, barberId },
+      include: {
+        client: true,
+        barber: true,
+        service: true,
+        services: { include: { service: true } }
+      },
+      orderBy: { scheduledDate: 'desc' }
+    });
+
+    return appointments.map(data => {
+      const servicos = mapServicos(data);
+
+      return new Agendamento({
+        id: data.id,
+        clienteNome: data.client.name,
+        clienteEmail: data.client.email || '',
+        clienteTelefone: data.client.phone,
+        barbeiroId: data.barber.id,
+        barbeiroNome: data.barber.name,
+        servicos,
+        servicoId: servicos[0]?.id || data.service?.id || null,
+        servicoNome: servicos.length ? undefined : data.service?.name,
+        data: data.scheduledDate,
+        horario: this.extrairHorario(data.scheduledDate),
+        status: data.status.toLowerCase(),
+        preco: servicos.length ? undefined : Number(data.service?.price || 0),
+        duracaoMinutos: servicos.length ? undefined : data.service?.durationMinutes,
+        observacoes: data.observations
+      });
     });
   }
 }

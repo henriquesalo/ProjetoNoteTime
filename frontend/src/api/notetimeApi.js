@@ -46,8 +46,8 @@ export const authApi = {
 
 // Agendamentos
 export const agendamentosApi = {
-  listar: async () => {
-    const response = await api.get('/agendamentos');
+  listar: async (filtros = {}) => {
+    const response = await api.get('/agendamentos', { params: filtros });
     return response.data.data;
   },
   
@@ -68,6 +68,11 @@ export const agendamentosApi = {
   
   cancelar: async (id) => {
     const response = await api.delete(`/agendamentos/${id}`);
+    return response.data;
+  },
+
+  alterarStatus: async (id, status) => {
+    const response = await api.patch(`/agendamentos/${id}/status`, { status });
     return response.data;
   }
 };
