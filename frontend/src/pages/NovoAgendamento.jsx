@@ -52,15 +52,31 @@ export default function NovoAgendamento() {
 
   const createAgendamento = useMutation({
     mutationFn: (data) => agendamentosApi.criar(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['agendamentos']);
+    onSuccess: async () => {
+      // CORREÇÃO: Força a atualização da Agenda, ignorando os filtros
+      await queryClient.invalidateQueries({ queryKey: ['agendamentos'], exact: false });
       navigate('/meus-agendamentos');
     }
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    createAgendamento.mutate(formData);
+
+    // CORREÇÃO DO FUSO HORÁRIO:
+    // Adicionamos T12:00:00 para que a data fique no meio do dia.
+    // Assim, o fuso horário (ex: -3h) não fará a data voltar para o dia anterior.
+    const dataSegura = `${formData.data}T12:00:00`;
+
+    const payload = {
+        ...formData,
+        data: dataSegura,
+        // Remove caracteres não numéricos do telefone
+        clienteTelefone: formData.clienteTelefone.replace(/\D/g, ''),
+        barbeiroId: formData.barbeiroId || undefined,
+        servicosIds: formData.servicosIds
+    };
+    
+    createAgendamento.mutate(payload);
   };
 
   const toggleServico = (id) => {
@@ -135,6 +151,7 @@ export default function NovoAgendamento() {
                 value={formData.clienteTelefone}
                 onChange={handleTelefoneChange}
                 className="w-full px-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-white"
+                required
               />
             </div>
           </div>
@@ -252,7 +269,7 @@ export default function NovoAgendamento() {
 
             <button
               type="submit"
-              disabled={createAgendamento.isPending}
+              disabled={createAgendamento.isPending || totalPreco === 0 || !formData.data || !formData.horario}
               className="w-full bg-white text-amber-600 font-bold py-3 rounded-lg disabled:opacity-50"
             >
               <CheckCircle className="inline mr-2" />
