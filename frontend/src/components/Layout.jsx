@@ -20,7 +20,7 @@ export default function Layout({ children }) {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const filteredNavigationItems = navigationItems.filter((item) => {
     // Barbeiro não pode criar novo agendamento
-    if (user?.tipo === 'BARBEIRO' && item.path === '/novo-agendamento') {
+    if (user?.role === 'BARBER' && item.path === '/novo-agendamento') {
       return false;
     }
     return true;

@@ -37,9 +37,63 @@ export class AgendamentoRepository {
 
   combinarDataHora(data, horario) {
     const [horas, minutos] = horario.split(':');
-    const dataObj = new Date(data);
+    const dataObj = this.parseDataFlex(data);
     dataObj.setHours(Number(horas), Number(minutos), 0, 0);
     return dataObj;
+  }
+
+  parseDataFlex(data) {
+    if (data instanceof Date) return new Date(data);
+    if (typeof data !== 'string') return new Date(data);
+    const iso = new Date(data);
+    if (!isNaN(iso.getTime())) return iso;
+    const m = data.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (m) {
+      const [_, dd, mm, yyyy] = m;
+      return new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+    }
+    return new Date(data);
+  }
+
+  calcularDuracaoTotal(servicos) {
+    return (servicos || []).reduce((sum, s) => sum + Number(s.duracaoMinutos || 0), 0);
+  }
+
+  addMinutes(date, minutes) {
+    const d = new Date(date);
+    d.setMinutes(d.getMinutes() + Number(minutes || 0));
+    return d;
+  }
+
+  async verificarConflitoHorario(barbeiroId, inicio, duracaoMinutos) {
+    const diaInicio = new Date(inicio);
+    diaInicio.setHours(0, 0, 0, 0);
+    const diaFim = new Date(inicio);
+    diaFim.setHours(23, 59, 59, 999);
+    const existentes = await prisma.appointment.findMany({
+      where: {
+        barberId: barbeiroId,
+        scheduledDate: { gte: diaInicio, lte: diaFim },
+        status: { in: ['SCHEDULED', 'CONFIRMED', 'PRESENT'] }
+      },
+      include: {
+        service: true,
+        services: { include: { service: true } }
+      }
+    });
+    const novoFim = this.addMinutes(inicio, duracaoMinutos);
+    for (const a of existentes) {
+      const rel = a.services?.length ? a.services : [];
+      const dur = rel.length
+        ? rel.reduce((sum, x) => sum + Number(x.durationMinutes ?? x.service.durationMinutes ?? 0), 0)
+        : Number(a.service?.durationMinutes || 0);
+      const ini = new Date(a.scheduledDate);
+      const fim = this.addMinutes(ini, dur);
+      if (inicio < fim && novoFim > ini) {
+        return true;
+      }
+    }
+    return false;
   }
 
   mapOne(data) {
@@ -87,6 +141,20 @@ export class AgendamentoRepository {
     return this.mapMany(appointments);
   }
 
+  async buscarPorId(id) {
+    const appointment = await prisma.appointment.findUnique({
+      where: { id },
+      include: {
+        client: true,
+        barber: true,
+        service: true,
+        services: { include: { service: true } }
+      }
+    });
+
+    return this.mapOne(appointment);
+  }
+
   async criar(agendamento) {
     if (!agendamento.servicos || agendamento.servicos.length === 0) {
       throw new Error('Agendamento precisa conter pelo menos um serviço');
@@ -131,21 +199,21 @@ export class AgendamentoRepository {
     if (!barber) {
       throw new Error('Barbeiro não encontrado');
     }
+    if (!barber.isActive) {
+      throw new Error('Barbeiro inativo');
+    }
+    if (!barber.unitId) {
+      throw new Error('Nenhuma unidade configurada para o barbeiro');
+    }
+    if (!/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(String(agendamento.horario))) {
+      throw new Error('Horário inválido');
+    }
 
     const scheduledDate = this.combinarDataHora(agendamento.data, agendamento.horario);
-
-    const conflito = await prisma.appointment.findFirst({
-      where: {
-        barberId: agendamento.barbeiroId,
-        scheduledDate,
-        status: {
-          in: ['SCHEDULED', 'CONFIRMED', 'PRESENT']
-        }
-      }
-    });
-
-    if (conflito) {
-      throw new Error('Já existe um agendamento para este barbeiro neste horário');
+    const duracaoTotal = this.calcularDuracaoTotal(agendamento.servicos);
+    const haConflito = await this.verificarConflitoHorario(agendamento.barbeiroId, scheduledDate, duracaoTotal);
+    if (haConflito) {
+      throw new Error('Horário indisponível para este barbeiro');
     }
 
     const created = await prisma.appointment.create({
@@ -190,6 +258,10 @@ export class AgendamentoRepository {
     });
   }
 
+  mapMany(list) {
+    return (list || []).map((data) => this.mapOne(data));
+  }
+
   construirFiltros(filtros) {
     const where = {};
 
@@ -223,19 +295,14 @@ export class AgendamentoRepository {
       };
     }
 
+    if (filtros.barbeiroId) {
+      where.barberId = filtros.barbeiroId;
+    }
+
     return where;
   }
 
-  extrairHorario(date) {
-    return date.toISOString().substring(11, 16);
-  }
-
-  combinarDataHora(data, horario) {
-    const [horas, minutos] = horario.split(':');
-    const combined = new Date(data);
-    combined.setHours(parseInt(horas), parseInt(minutos), 0, 0);
-    return combined;
-  }
+  
   async listarPorBarbeiro(barbeiroId, filtros = {}) {
     const where = this.construirFiltros(filtros);
 

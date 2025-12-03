@@ -19,7 +19,7 @@ export default function ProtectedRoute({ children }) {
   }
 
   //  Barbeiro não pode acessar novo agendamento
-  if (user?.tipo === 'BARBEIRO' && location.pathname === '/novo-agendamento') {
+  if (user?.role === 'BARBER' && location.pathname === '/novo-agendamento') {
     return <Navigate to="/agenda" replace />;
   }
 

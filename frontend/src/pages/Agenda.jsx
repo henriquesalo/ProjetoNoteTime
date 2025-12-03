@@ -8,6 +8,7 @@ import { ptBR } from 'date-fns/locale';
 
 export default function Agenda() {
   const queryClient = useQueryClient();
+  const [selectedId, setSelectedId] = useState(null);
   const [currentWeek, setCurrentWeek] = useState(startOfWeek(new Date(), { weekStartsOn: 0 }));
   const [filtros, setFiltros] = useState({
     barbeiroId: "todos",
@@ -44,6 +45,7 @@ export default function Agenda() {
   const alterarStatusMutation = useMutation({
     mutationFn: ({ id, status }) => agendamentosApi.alterarStatus(id, status),
     onSuccess: () => {
+      setSelectedId(null);
       queryClient.invalidateQueries({ queryKey: ['agendamentos'] });
     },
     onError: (error) => {
@@ -175,47 +177,50 @@ export default function Agenda() {
                 </div>
                 <div className="p-3 space-y-2 min-h-[300px] max-h-[500px] overflow-y-auto">
                   {agendamentosDia.length === 0 ? (
-	                    <div className="text-center text-zinc-500 text-sm py-8">
-	                      Sem agendamentos
-	                    </div>
-	                  ) : (
-	                    agendamentosDia.map((agendamento) => (
-	                      <div
-	                        key={agendamento.id}
-	                        className="p-3 bg-zinc-900 rounded-lg border border-zinc-700 hover:border-amber-500/50 transition-all"
-	                      >
-	                        <div className="flex items-center justify-between mb-2">
-	                          <span className="text-xs font-semibold text-amber-500">
-	                            {agendamento.horario}
-	                          </span>
-	                          <span className={`text-xs px-2 py-1 rounded ${statusColors[agendamento.status]}`}>
-	                            {statusLabels[agendamento.status] || agendamento.status}
-	                          </span>
-	                        </div>
-	                        <p className="text-sm font-medium text-white mb-1">
-	                          {agendamento.clienteNome}
-	                        </p>
-	                        <p className="text-xs text-zinc-400">
-	                          {agendamento.barbeiroNome}
-	                        </p>
-	                        <p className="text-xs text-zinc-500 mt-1">
-	                          {agendamento.servicoNome}
-	                        </p>
-	                        <div className="mt-3 pt-3 border-t border-zinc-800 flex flex-wrap gap-2">
-	                          {Object.keys(statusLabels).filter(s => s !== agendamento.status).map(status => (
-	                            <button
-	                              key={status}
-	                              onClick={() => handleAlterarStatus(agendamento.id, status)}
-	                              className="text-xs px-2 py-1 rounded bg-zinc-700 text-white hover:bg-amber-500 transition-colors"
-	                              disabled={alterarStatusMutation.isPending}
-	                            >
-	                              {statusLabels[status]}
-	                            </button>
-	                          ))}
-	                        </div>
-	                      </div>
-	                    ))
-	                  )}
+                    <div className="text-center text-zinc-500 text-sm py-8">
+                      Sem agendamentos
+                    </div>
+                  ) : (
+                    agendamentosDia.map((agendamento) => (
+                      <div
+                        key={agendamento.id}
+                        className={`p-3 bg-zinc-900 rounded-lg border transition-all ${selectedId === agendamento.id ? 'border-amber-500' : 'border-zinc-700 hover:border-amber-500/50'}`}
+                        onClick={() => setSelectedId(prev => prev === agendamento.id ? null : agendamento.id)}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-semibold text-amber-500">
+                            {agendamento.horario}
+                          </span>
+                          <span className={`text-xs px-2 py-1 rounded ${statusColors[agendamento.status]}`}>
+                            {statusLabels[agendamento.status] || agendamento.status}
+                          </span>
+                        </div>
+                        <p className="text-sm font-medium text-white mb-1">
+                          {agendamento.clienteNome}
+                        </p>
+                        <p className="text-xs text-zinc-400">
+                          {agendamento.barbeiroNome}
+                        </p>
+                        <p className="text-xs text-zinc-500 mt-1">
+                          {agendamento.servicoNome}
+                        </p>
+                        {selectedId === agendamento.id && (
+                          <div className="mt-3 pt-3 border-t border-zinc-800 flex flex-wrap gap-2">
+                            {Object.keys(statusLabels).filter(s => s !== agendamento.status).map(status => (
+                              <button
+                                key={status}
+                                onClick={(e) => { e.stopPropagation(); handleAlterarStatus(agendamento.id, status); }}
+                                className="text-xs px-2 py-1 rounded bg-zinc-700 text-white hover:bg-amber-500 transition-colors"
+                                disabled={alterarStatusMutation.isPending}
+                              >
+                                {statusLabels[status]}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>

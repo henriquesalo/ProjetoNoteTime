@@ -25,11 +25,20 @@ export default function MeusAgendamentos() {
   });
 
   const statusColors = {
-    pendente: "bg-yellow-500/20 text-yellow-400",
-    confirmado: "bg-green-500/20 text-green-400",
-    em_andamento: "bg-blue-500/20 text-blue-400",
-    concluido: "bg-purple-500/20 text-purple-400",
-    cancelado: "bg-red-500/20 text-red-400",
+    scheduled: "bg-yellow-500/20 text-yellow-400",
+    confirmed: "bg-green-500/20 text-green-400",
+    present: "bg-blue-500/20 text-blue-400",
+    completed: "bg-purple-500/20 text-purple-400",
+    cancelled: "bg-red-500/20 text-red-400",
+  };
+
+  const statusLabels = {
+    scheduled: "Agendado",
+    confirmed: "Confirmado",
+    present: "Presente",
+    absent: "Ausente",
+    completed: "Concluído",
+    cancelled: "Cancelado",
   };
 
   const agendamentosFiltrados = agendamentos.filter(a => {
@@ -49,7 +58,7 @@ export default function MeusAgendamentos() {
 
       {/* Filtros */}
       <div className="flex gap-2 mb-6 overflow-x-auto">
-        {['todos', 'pendente', 'confirmado', 'concluido', 'cancelado'].map((status) => (
+        {['todos', 'scheduled', 'confirmed', 'completed', 'cancelled'].map((status) => (
           <button
             key={status}
             onClick={() => setFiltro(status)}
@@ -59,7 +68,7 @@ export default function MeusAgendamentos() {
                 : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
             }`}
           >
-            {status === 'todos' ? 'Todos' : status.charAt(0).toUpperCase() + status.slice(1)}
+            {status === 'todos' ? 'Todos' : (statusLabels[status] || status.charAt(0).toUpperCase() + status.slice(1))}
           </button>
         ))}
       </div>
@@ -70,7 +79,7 @@ export default function MeusAgendamentos() {
           <div key={agendamento.id} className="bg-zinc-800 rounded-xl p-6 border border-zinc-700">
             <div className="flex justify-between items-start mb-4">
               <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusColors[agendamento.status]}`}>
-                {agendamento.status}
+                {statusLabels[agendamento.status] || agendamento.status}
               </span>
               <div className="text-right">
                 <p className="text-amber-500 font-bold text-lg">
@@ -107,7 +116,7 @@ export default function MeusAgendamentos() {
               </div>
             </div>
 
-            {agendamento.status === "pendente" && (
+            {agendamento.status === "scheduled" && (
               <div className="flex gap-2">
                 <button
                   onClick={() => confirmarAgendamento.mutate(agendamento.id)}
@@ -128,7 +137,7 @@ export default function MeusAgendamentos() {
               </div>
             )}
 
-            {agendamento.status === "confirmado" && (
+            {agendamento.status === "confirmed" && (
               <button
                 onClick={() => cancelarAgendamento.mutate(agendamento.id)}
                 disabled={cancelarAgendamento.isPending}

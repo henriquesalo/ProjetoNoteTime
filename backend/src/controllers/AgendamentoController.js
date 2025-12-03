@@ -149,11 +149,25 @@ export class AgendamentoController {
   async alterarStatus(req, res) {
     try {
       const { id } = req.params;
-      const { status } = req.body;
+      const { status: bodyStatus } = req.body || {};
+      const queryStatus = req.query?.status;
+      const statusInput = bodyStatus ?? queryStatus;
 
-      if (!status) {
+      if (!statusInput) {
         return res.status(400).json({ success: false, error: 'O novo status é obrigatório' });
       }
+
+      const mapa = {
+        pendente: 'scheduled',
+        confirmado: 'confirmed',
+        concluido: 'completed',
+        cancelado: 'cancelled',
+        presente: 'present',
+        ausente: 'absent',
+        em_andamento: 'present'
+      };
+      const normalizado = String(statusInput).trim().toLowerCase();
+      const statusFinal = mapa[normalizado] || normalizado;
 
       const agendamento = await agendamentoRepo.buscarPorId(id);
       
@@ -161,10 +175,10 @@ export class AgendamentoController {
         return res.status(404).json({ success: false, error: 'Agendamento não encontrado' });
       }
 
-      agendamento.alterarStatus(status);
+      agendamento.alterarStatus(statusFinal);
       await agendamentoRepo.atualizar(agendamento);
 
-      res.json({ success: true, message: `Status do agendamento alterado para ${status}` });
+      res.json({ success: true, message: `Status do agendamento alterado para ${statusFinal}` });
     } catch (error) {
       res.status(400).json({ success: false, error: error.message });
     }
@@ -194,6 +208,25 @@ export class AgendamentoController {
       } catch (_) {}
 
       res.json({ success: true, message: 'Agendamento cancelado' });
+    } catch (error) {
+      res.status(400).json({ success: false, error: error.message });
+    }
+  }
+
+  async alterarStatus(req, res) {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+
+      const agendamento = await agendamentoRepo.buscarPorId(id);
+      if (!agendamento) {
+        return res.status(404).json({ success: false, error: 'Agendamento não encontrado' });
+      }
+
+      agendamento.alterarStatus(status);
+      await agendamentoRepo.atualizar(agendamento);
+
+      res.json({ success: true, message: 'Status alterado com sucesso' });
     } catch (error) {
       res.status(400).json({ success: false, error: error.message });
     }

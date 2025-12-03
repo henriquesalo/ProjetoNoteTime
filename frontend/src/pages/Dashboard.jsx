@@ -20,11 +20,11 @@ export default function Dashboard() {
   const fimMes = endOfMonth(hoje);
 
   const agendamentosHoje = agendamentos.filter(a => 
-    isToday(new Date(a.data)) && a.status !== 'cancelado'
+    isToday(new Date(a.data)) && a.status !== 'cancelled'
   );
 
   const proximosAgendamentos = agendamentos
-    .filter(a => isFuture(new Date(a.data)) && a.status !== 'cancelado')
+    .filter(a => isFuture(new Date(a.data)) && a.status !== 'cancelled')
     .slice(0, 5);
 
   const receitaMes = agendamentos
@@ -32,7 +32,7 @@ export default function Dashboard() {
       const dataAgendamento = new Date(a.data);
       return dataAgendamento >= inicioMes && 
              dataAgendamento <= fimMes && 
-             a.status === 'concluido';
+             a.status === 'completed';
     })
     .reduce((sum, a) => sum + (a.preco || 0), 0);
 
@@ -87,8 +87,8 @@ export default function Dashboard() {
                     </p>
                   </div>
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    agendamento.status === 'confirmado' ? 'bg-green-500/20 text-green-400' :
-                    agendamento.status === 'pendente' ? 'bg-yellow-500/20 text-yellow-400' :
+                    agendamento.status === 'confirmed' ? 'bg-green-500/20 text-green-400' :
+                    agendamento.status === 'scheduled' ? 'bg-yellow-500/20 text-yellow-400' :
                     'bg-blue-500/20 text-blue-400'
                   }`}>
                     {agendamento.status}
