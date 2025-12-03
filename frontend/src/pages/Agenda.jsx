@@ -2,7 +2,7 @@ import React, { useState, useMemo, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { agendamentosApi, barbeirosApi } from '../api/notetimeApi';
 import { Calendar as CalendarIcon, Filter, ChevronLeft, ChevronRight, Search, RefreshCw } from 'lucide-react';
-import { format, addDays, startOfWeek, addWeeks, subWeeks, parseISO } from 'date-fns';
+import { format, addDays, startOfWeek, addWeeks, subWeeks } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export default function Agenda() {
